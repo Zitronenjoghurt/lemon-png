@@ -20,6 +20,14 @@ pub enum PngError {
 }
 
 impl PngError {
+    pub fn invalid_chunk(chunk_type: ChunkType, offset: usize, kind: InvalidChunk) -> Self {
+        Self::InvalidChunk {
+            chunk_type,
+            offset,
+            kind,
+        }
+    }
+
     pub fn reader_overflow(offset: usize) -> Self {
         Self::ReaderOverflow { offset }
     }

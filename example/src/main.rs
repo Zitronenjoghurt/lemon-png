@@ -1,6 +1,8 @@
 use lemon_png::decode::png::{PngDecoder, PngDecoderConfig};
 use std::path::PathBuf;
 
+mod crc_table;
+
 fn main() {
     let path = PathBuf::from("./../test.png");
     let bytes = std::fs::read(&path).unwrap();
