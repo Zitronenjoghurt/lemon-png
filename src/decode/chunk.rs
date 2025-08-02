@@ -3,8 +3,10 @@ use crate::png::chunk::{Chunk, ChunkType};
 use crate::png::invalid_chunk::InvalidChunk;
 use crate::png::raw_chunk::RawChunk;
 use crate::validate::chunk::ihdr::validate_ihdr;
+use crate::validate::chunk::plte::validate_plte;
 
 mod ihdr;
+mod plte;
 
 #[derive(Debug, Default)]
 pub struct ChunkDecoder;
@@ -25,6 +27,7 @@ impl ChunkDecoder {
             ChunkType::ImageHeader => {
                 Chunk::ImageHeader(validate_ihdr(ihdr::decode(raw)?, offset)?)
             }
+            ChunkType::Palette => Chunk::Palette(validate_plte(plte::decode(raw)?, offset)?),
             ChunkType::ImageEnd => Chunk::ImageEnd,
         };
 

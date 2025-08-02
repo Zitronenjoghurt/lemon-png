@@ -4,7 +4,7 @@ use std::path::PathBuf;
 mod crc_table;
 
 fn main() {
-    let path = PathBuf::from("./../test.png");
+    let path = PathBuf::from("./../test_images/basn3p04.png");
     let bytes = std::fs::read(&path).unwrap();
 
     let decode_config = PngDecoderConfig::new().skip_erroneous_chunks();

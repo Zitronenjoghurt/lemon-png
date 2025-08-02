@@ -1,3 +1,4 @@
+mod color;
 pub mod decode;
 mod error;
 pub mod png;
