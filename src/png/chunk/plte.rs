@@ -5,8 +5,3 @@ use crate::color::rgb::ColorRGB8;
 pub struct PLTEChunk {
     pub colors: Vec<ColorRGB8>,
 }
-
-#[derive(Debug)]
-pub struct RawPLTEChunk {
-    pub colors: Vec<u8>,
-}

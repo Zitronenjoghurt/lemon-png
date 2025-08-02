@@ -1,6 +1,7 @@
-use crate::decode::chunk::ChunkDecoder;
-use crate::decode::raw_chunks::RawChunkExtractor;
-use crate::decode::reader::Reader;
+use crate::codec::decode::chunk::ChunkDecoder;
+use crate::codec::decode::raw_chunks::RawChunkExtractor;
+use crate::codec::decode::reader::Reader;
+use crate::codec::validate::chunk::ChunkValidator;
 use crate::error::{PngError, PngResult};
 use crate::png::chunk::Chunk;
 use crate::png::{Png, PNG_SIGNATURE};
@@ -10,6 +11,7 @@ pub struct PngDecoder<'a> {
     offset: usize,
     config: &'a PngDecoderConfig,
     chunk_decoder: ChunkDecoder,
+    chunk_validator: ChunkValidator,
 }
 
 impl<'a> PngDecoder<'a> {
@@ -19,6 +21,7 @@ impl<'a> PngDecoder<'a> {
             offset: 0,
             config,
             chunk_decoder: ChunkDecoder,
+            chunk_validator: ChunkValidator,
         }
     }
 
@@ -45,7 +48,9 @@ impl<'a> PngDecoder<'a> {
 
     fn decode_chunks(&mut self) -> PngResult<Vec<Chunk>> {
         RawChunkExtractor::new(&self.data[8..]).try_fold(Vec::new(), |mut chunks, raw_chunk| {
-            let chunk = self.chunk_decoder.decode(raw_chunk)?;
+            let chunk = self
+                .chunk_decoder
+                .decode(raw_chunk, &self.chunk_validator)?;
             chunks.push(chunk);
             Ok(chunks)
         })
@@ -53,7 +58,11 @@ impl<'a> PngDecoder<'a> {
 
     fn decode_chunks_skip_erroneous(&mut self) -> Vec<Chunk> {
         RawChunkExtractor::new(&self.data[8..])
-            .filter_map(|raw_chunk| self.chunk_decoder.decode(raw_chunk).ok())
+            .filter_map(|raw_chunk| {
+                self.chunk_decoder
+                    .decode(raw_chunk, &self.chunk_validator)
+                    .ok()
+            })
             .collect()
     }
 }

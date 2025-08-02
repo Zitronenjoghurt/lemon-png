@@ -1,5 +1,6 @@
+use crate::codec::chunk::ihdr::ParsedIHDRChunk;
 use crate::error::{PngError, PngResult};
-use crate::png::chunk::ihdr::{IHDRChunk, RawIHDRChunk};
+use crate::png::chunk::ihdr::IHDRChunk;
 use crate::png::chunk::ChunkType;
 use crate::png::types::color_type::ColorType;
 use crate::png::types::compression_method::CompressionMethod;
@@ -7,7 +8,7 @@ use crate::png::types::filter_method::FilterMethod;
 use crate::png::types::image_type::ImageType;
 use crate::png::types::interlace_method::InterlaceMethod;
 
-pub fn validate_ihdr(raw: RawIHDRChunk, offset: usize) -> PngResult<IHDRChunk> {
+pub fn validate(raw: ParsedIHDRChunk, offset: usize) -> PngResult<IHDRChunk> {
     let color_type = ColorType::try_from(raw.color_type).map_err(|invalid_chunk| {
         PngError::invalid_chunk(ChunkType::ImageHeader, offset, invalid_chunk)
     })?;

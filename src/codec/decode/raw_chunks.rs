@@ -1,5 +1,5 @@
-use crate::decode::reader::Reader;
-use crate::png::raw_chunk::RawChunk;
+use crate::codec::decode::reader::Reader;
+use crate::codec::raw_chunk::RawChunk;
 
 pub struct RawChunkExtractor<'a> {
     data: &'a [u8],

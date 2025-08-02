@@ -1,4 +1,4 @@
-use lemon_png::decode::png::{PngDecoder, PngDecoderConfig};
+use lemon_png::codec::decode::png::{PngDecoder, PngDecoderConfig};
 use std::path::PathBuf;
 
 mod crc_table;

@@ -1,10 +1,11 @@
+use crate::codec::chunk::plte::ParsedPLTEChunk;
 use crate::color::rgb::ColorRGB8;
 use crate::error::{PngError, PngResult};
-use crate::png::chunk::plte::{PLTEChunk, RawPLTEChunk};
+use crate::png::chunk::plte::PLTEChunk;
 use crate::png::chunk::ChunkType;
 use crate::png::invalid_chunk::InvalidChunk;
 
-pub fn validate_plte(raw: RawPLTEChunk, offset: usize) -> PngResult<PLTEChunk> {
+pub fn validate(raw: ParsedPLTEChunk, offset: usize) -> PngResult<PLTEChunk> {
     if raw.colors.len() % 3 != 0 {
         return Err(PngError::invalid_chunk(
             ChunkType::Palette,
