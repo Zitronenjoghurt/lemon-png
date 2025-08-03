@@ -1,24 +1,21 @@
-use crate::codec::chunk::context::ChunkContext;
 use crate::codec::chunk::{ihdr, plte};
 use crate::codec::parsed_chunk::ParsedChunk;
 use crate::codec::raw_chunk::RawChunk;
 use crate::codec::validate::chunk::ChunkValidator;
 use crate::error::{PngError, PngResult};
 use crate::png::chunk::idat::IDATChunk;
-use crate::png::chunk::{Chunk, ChunkType};
+use crate::png::chunk::{Chunk, ChunkType, Chunks};
 use crate::png::invalid_chunk::InvalidChunk;
 
 #[derive(Debug, Default)]
-pub struct ChunkDecoder {
-    validator: ChunkValidator,
-}
+pub struct ChunkDecoder;
 
 impl ChunkDecoder {
-    pub fn new(validator: ChunkValidator) -> Self {
-        Self { validator }
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    pub fn decode(&self, context: &mut ChunkContext, raw: RawChunk) -> PngResult<Chunk> {
+    pub fn decode(&self, raw: RawChunk, validator: &impl ChunkValidator) -> PngResult<Chunk> {
         let chunk_type = ChunkType::try_from(raw.chunk_type)?;
         let offset = raw.offset;
         if !raw.validate_crc() {
@@ -29,43 +26,39 @@ impl ChunkDecoder {
             ));
         }
 
-        let parsed_chunk = self.parse(context, raw)?;
-        let chunk = self.validator.validate(context, parsed_chunk)?;
+        let parsed_chunk = self.parse(raw)?;
+        let chunk = validator.validate(parsed_chunk)?;
         Ok(chunk)
     }
 
     pub fn decode_all(
         &mut self,
-        context: &mut ChunkContext,
         raw_chunks: impl Iterator<Item = RawChunk>,
-    ) -> PngResult<Vec<Chunk>> {
-        let mut result = Vec::new();
+        validator: &impl ChunkValidator,
+    ) -> PngResult<Chunks> {
+        let mut chunks = Vec::new();
         for raw_chunk in raw_chunks {
-            let chunk = self.decode(context, raw_chunk)?;
-            Self::update_context_from_chunk(context, &chunk);
-            result.push(chunk);
+            let chunk = self.decode(raw_chunk, validator)?;
+            chunks.push(chunk);
         }
-        Ok(result)
+        Ok(Chunks::new(chunks))
     }
 
     pub fn decode_all_skip_errors(
         &mut self,
-        context: &mut ChunkContext,
         raw_chunks: impl Iterator<Item = RawChunk>,
-    ) -> Vec<Chunk> {
+        validator: &impl ChunkValidator,
+    ) -> Chunks {
         let mut chunks = Vec::new();
         for raw_chunk in raw_chunks {
-            if let Ok(chunk) = self.decode(context, raw_chunk) {
-                Self::update_context_from_chunk(context, &chunk);
+            if let Ok(chunk) = self.decode(raw_chunk, validator) {
                 chunks.push(chunk);
             }
         }
-        chunks
+        Chunks::new(chunks)
     }
 
-    pub fn parse(&self, context: &mut ChunkContext, raw: RawChunk) -> PngResult<ParsedChunk> {
-        Self::update_context_from_raw_chunk(context, &raw);
-
+    pub fn parse(&self, raw: RawChunk) -> PngResult<ParsedChunk> {
         let chunk_type = ChunkType::try_from(raw.chunk_type)?;
         let parsed_chunk = match chunk_type {
             ChunkType::ImageData => ParsedChunk::ImageData(IDATChunk {
@@ -77,17 +70,5 @@ impl ChunkDecoder {
         };
 
         Ok(parsed_chunk)
-    }
-
-    fn update_context_from_raw_chunk(context: &mut ChunkContext, raw_chunk: &RawChunk) {
-        context.set_offset(raw_chunk.offset);
-    }
-
-    fn update_context_from_chunk(context: &mut ChunkContext, chunk: &Chunk) {
-        if let Chunk::ImageHeader(header) = chunk {
-            context.set_width(header.width);
-            context.set_height(header.height);
-            context.set_image_type(header.image_type);
-        }
     }
 }

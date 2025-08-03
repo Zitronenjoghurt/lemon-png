@@ -1,4 +1,3 @@
-use crate::codec::chunk::context::ChunkContextParameter;
 use crate::png::chunk::ChunkType;
 use crate::png::invalid_chunk::InvalidChunk;
 
@@ -6,17 +5,17 @@ pub type PngResult<T> = Result<T, PngError>;
 
 #[derive(Debug)]
 pub enum PngError {
+    DuplicateHeader,
     InvalidChunk {
         chunk_type: ChunkType,
         offset: usize,
         kind: InvalidChunk,
     },
     InvalidSignature,
-    MissingContext {
-        chunk_type: ChunkType,
-        offset: Option<usize>,
-        parameter: ChunkContextParameter,
-    },
+    MisplacedHeader,
+    MissingEnd,
+    MissingHeader,
+    MissingPalette,
     MissingSignature,
     ReaderOverflow {
         offset: usize,
@@ -34,18 +33,6 @@ impl PngError {
         }
     }
 
-    pub fn missing_context(
-        chunk_type: ChunkType,
-        offset: Option<usize>,
-        parameter: ChunkContextParameter,
-    ) -> Self {
-        Self::MissingContext {
-            chunk_type,
-            offset,
-            parameter,
-        }
-    }
-
     pub fn reader_overflow(offset: usize) -> Self {
         Self::ReaderOverflow { offset }
     }
@@ -54,6 +41,7 @@ impl PngError {
 impl std::fmt::Display for PngError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            PngError::DuplicateHeader => write!(f, "Duplicate header chunks"),
             PngError::InvalidChunk {
                 chunk_type,
                 offset,
@@ -62,16 +50,10 @@ impl std::fmt::Display for PngError {
                 write!(f, "Invalid chunk ({chunk_type}) at offset {offset}: {kind}")
             }
             PngError::InvalidSignature => write!(f, "Invalid signature"),
-            PngError::MissingContext {
-                chunk_type,
-                offset,
-                parameter,
-            } => {
-                write!(
-                    f,
-                    "Missing context for chunk ({chunk_type}) at offset {offset:?}: {parameter:?}"
-                )
-            }
+            PngError::MisplacedHeader => write!(f, "Misplaced header chunk"),
+            PngError::MissingEnd => write!(f, "Missing end chunk"),
+            PngError::MissingHeader => write!(f, "Missing header"),
+            PngError::MissingPalette => write!(f, "Missing palette"),
             PngError::MissingSignature => write!(f, "Missing signature"),
             PngError::ReaderOverflow { offset } => {
                 write!(f, "Reader overflow at offset {offset}")

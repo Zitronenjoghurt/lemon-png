@@ -1,7 +1,7 @@
 use crate::png::invalid_chunk::InvalidChunk;
 use crate::png::types::color_type::ColorType;
 
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 /// https://www.w3.org/TR/png-3/#table111
 pub enum ImageType {
     /// Greyscale, bit depth: 1
@@ -31,6 +31,7 @@ pub enum ImageType {
     /// Truecolor, bit depth: 16
     RGB48 = 12,
     /// Truecolor with alpha, bit depth: 8
+    #[default]
     RGBA32 = 13,
     /// Truecolor with alpha, bit depth: 16
     RGBA64 = 14,

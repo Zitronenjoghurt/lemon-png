@@ -1,9 +1,10 @@
-use crate::codec::chunk::context::ChunkContext;
 use crate::codec::decode::chunk::ChunkDecoder;
 use crate::codec::decode::raw_chunks::RawChunkExtractor;
 use crate::codec::decode::reader::Reader;
-use crate::codec::validate::chunk::ChunkValidator;
+use crate::codec::validate::chunk::DefaultChunkValidator;
 use crate::error::{PngError, PngResult};
+use crate::png::chunk::{Chunk, ChunkType, Chunks};
+use crate::png::types::color_type::ColorType;
 use crate::png::{Png, PNG_SIGNATURE};
 
 pub struct PngDecoder<'a> {
@@ -25,16 +26,16 @@ impl<'a> PngDecoder<'a> {
         self.verify_signature()?;
 
         let extractor = RawChunkExtractor::new(&self.data[8..]);
-        let mut chunk_context = ChunkContext::default();
-        let mut chunk_decoder = ChunkDecoder::new(ChunkValidator::default());
+        let validator = DefaultChunkValidator;
+        let mut decoder = ChunkDecoder::new();
 
         let chunks = if self.config.skip_erroneous_chunks {
-            chunk_decoder.decode_all_skip_errors(&mut chunk_context, extractor)
+            decoder.decode_all_skip_errors(extractor, &validator)
         } else {
-            chunk_decoder.decode_all(&mut chunk_context, extractor)?
+            decoder.decode_all(extractor, &validator)?
         };
 
-        Ok(Png::new(chunks))
+        self.assemble_png(chunks)
     }
 
     fn verify_signature(&mut self) -> PngResult<()> {
@@ -44,6 +45,50 @@ impl<'a> PngDecoder<'a> {
         } else {
             Ok(())
         }
+    }
+
+    fn assemble_png(&self, chunks: Chunks) -> PngResult<Png> {
+        let Some((header_index, Chunk::ImageHeader(header))) =
+            chunks.get_one_by_type_with_index(ChunkType::ImageHeader)
+        else {
+            return Err(PngError::MissingHeader);
+        };
+        if header_index != 0 {
+            return Err(PngError::MisplacedHeader);
+        };
+        if !chunks.is_type_unique(ChunkType::ImageData) {
+            return Err(PngError::DuplicateHeader);
+        };
+
+        let chunk_count = chunks.len();
+        if !chunks.is_type_at_index_and_unique(ChunkType::ImageEnd, chunk_count - 1) {
+            return Err(PngError::MissingEnd);
+        };
+
+        let palette = match chunks.get_one_by_type(ChunkType::Palette) {
+            Some(Chunk::Palette(palette)) => Some(palette),
+            _ => None,
+        };
+        if header.color_type() == ColorType::Indexed && !chunks.is_type_unique(ChunkType::Palette) {
+            return Err(PngError::MissingPalette);
+        };
+
+        let data =
+            chunks
+                .iter_by_type(ChunkType::ImageData)
+                .fold(Vec::new(), |mut acc, (_, chunk)| {
+                    if let Chunk::ImageData(data_chunk) = chunk {
+                        acc.extend(data_chunk.compressed.clone());
+                    }
+                    acc
+                });
+
+        let mut builder = Png::builder().header_chunk(header).compressed_data(data);
+        if let Some(palette) = palette {
+            builder = builder.palette_chunk(palette);
+        }
+
+        Ok(builder.build())
     }
 }
 

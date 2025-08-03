@@ -1,7 +1,8 @@
 use crate::png::invalid_chunk::InvalidChunk;
 
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum FilterMethod {
+    #[default]
     AdaptiveFiveTypes = 0,
 }
 

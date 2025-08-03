@@ -1,4 +1,3 @@
-use crate::codec::chunk::context::ChunkContext;
 use crate::codec::chunk::validate_raw_chunk_data_length;
 use crate::codec::raw_chunk::RawChunk;
 use crate::error::{PngError, PngResult};
@@ -13,6 +12,7 @@ use crate::utils::bytestream::read_u32_be;
 
 #[derive(Debug)]
 pub struct ParsedIHDRChunk {
+    pub offset: usize,
     pub width: u32,
     pub height: u32,
     pub bit_depth: u8,
@@ -34,6 +34,7 @@ pub fn parse(raw: RawChunk) -> PngResult<ParsedIHDRChunk> {
     let interlace_method = raw.data[12];
 
     Ok(ParsedIHDRChunk {
+        offset: raw.offset,
         width,
         height,
         bit_depth,
@@ -44,29 +45,27 @@ pub fn parse(raw: RawChunk) -> PngResult<ParsedIHDRChunk> {
     })
 }
 
-pub fn validate(raw: ParsedIHDRChunk, context: &ChunkContext) -> PngResult<IHDRChunk> {
-    let offset = context.require_offset(ChunkType::ImageHeader)?;
-
+pub fn validate(raw: ParsedIHDRChunk) -> PngResult<IHDRChunk> {
     let color_type = ColorType::try_from(raw.color_type).map_err(|invalid_chunk| {
-        PngError::invalid_chunk(ChunkType::ImageHeader, offset, invalid_chunk)
+        PngError::invalid_chunk(ChunkType::ImageHeader, raw.offset, invalid_chunk)
     })?;
 
     let compression_method =
         CompressionMethod::try_from(raw.compression_method).map_err(|invalid_chunk| {
-            PngError::invalid_chunk(ChunkType::ImageHeader, offset, invalid_chunk)
+            PngError::invalid_chunk(ChunkType::ImageHeader, raw.offset, invalid_chunk)
         })?;
 
     let filter_method = FilterMethod::try_from(raw.filter_method).map_err(|invalid_chunk| {
-        PngError::invalid_chunk(ChunkType::ImageHeader, offset, invalid_chunk)
+        PngError::invalid_chunk(ChunkType::ImageHeader, raw.offset, invalid_chunk)
     })?;
 
     let interlace_method =
         InterlaceMethod::try_from(raw.interlace_method).map_err(|invalid_chunk| {
-            PngError::invalid_chunk(ChunkType::ImageHeader, offset, invalid_chunk)
+            PngError::invalid_chunk(ChunkType::ImageHeader, raw.offset, invalid_chunk)
         })?;
 
     let image_type = ImageType::try_from((color_type, raw.bit_depth)).map_err(|invalid_chunk| {
-        PngError::invalid_chunk(ChunkType::ImageHeader, offset, invalid_chunk)
+        PngError::invalid_chunk(ChunkType::ImageHeader, raw.offset, invalid_chunk)
     })?;
 
     Ok(IHDRChunk {
