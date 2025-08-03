@@ -1,3 +1,4 @@
+use crate::codec::chunk::context::ChunkContextParameter;
 use crate::png::chunk::ChunkType;
 use crate::png::invalid_chunk::InvalidChunk;
 
@@ -11,6 +12,11 @@ pub enum PngError {
         kind: InvalidChunk,
     },
     InvalidSignature,
+    MissingContext {
+        chunk_type: ChunkType,
+        offset: Option<usize>,
+        parameter: ChunkContextParameter,
+    },
     MissingSignature,
     ReaderOverflow {
         offset: usize,
@@ -25,6 +31,18 @@ impl PngError {
             chunk_type,
             offset,
             kind,
+        }
+    }
+
+    pub fn missing_context(
+        chunk_type: ChunkType,
+        offset: Option<usize>,
+        parameter: ChunkContextParameter,
+    ) -> Self {
+        Self::MissingContext {
+            chunk_type,
+            offset,
+            parameter,
         }
     }
 
@@ -44,6 +62,16 @@ impl std::fmt::Display for PngError {
                 write!(f, "Invalid chunk ({chunk_type}) at offset {offset}: {kind}")
             }
             PngError::InvalidSignature => write!(f, "Invalid signature"),
+            PngError::MissingContext {
+                chunk_type,
+                offset,
+                parameter,
+            } => {
+                write!(
+                    f,
+                    "Missing context for chunk ({chunk_type}) at offset {offset:?}: {parameter:?}"
+                )
+            }
             PngError::MissingSignature => write!(f, "Missing signature"),
             PngError::ReaderOverflow { offset } => {
                 write!(f, "Reader overflow at offset {offset}")

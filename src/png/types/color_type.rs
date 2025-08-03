@@ -1,7 +1,7 @@
 use crate::png::invalid_chunk::InvalidChunk;
 use std::fmt::Formatter;
 
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 /// https://www.w3.org/TR/png-3/#4Concepts.PNGImage
 pub enum ColorType {
     /// Each pixel consists of a single grey sample, which represents overall luminance (on a scale from black to white).
@@ -19,6 +19,7 @@ pub enum ColorType {
     /// Each pixel consists of two samples: a grey sample and an alpha sample.
     GreyscaleAlpha = 4,
     /// Each pixel consists of four samples: red, green, blue and alpha.
+    #[default]
     TruecolorAlpha = 6,
 }
 

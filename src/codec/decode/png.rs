@@ -1,17 +1,15 @@
+use crate::codec::chunk::context::ChunkContext;
 use crate::codec::decode::chunk::ChunkDecoder;
 use crate::codec::decode::raw_chunks::RawChunkExtractor;
 use crate::codec::decode::reader::Reader;
 use crate::codec::validate::chunk::ChunkValidator;
 use crate::error::{PngError, PngResult};
-use crate::png::chunk::Chunk;
 use crate::png::{Png, PNG_SIGNATURE};
 
 pub struct PngDecoder<'a> {
     data: &'a [u8],
     offset: usize,
     config: &'a PngDecoderConfig,
-    chunk_decoder: ChunkDecoder,
-    chunk_validator: ChunkValidator,
 }
 
 impl<'a> PngDecoder<'a> {
@@ -20,18 +18,20 @@ impl<'a> PngDecoder<'a> {
             data,
             offset: 0,
             config,
-            chunk_decoder: ChunkDecoder,
-            chunk_validator: ChunkValidator,
         }
     }
 
     pub fn decode(mut self) -> PngResult<Png> {
         self.verify_signature()?;
 
+        let extractor = RawChunkExtractor::new(&self.data[8..]);
+        let mut chunk_context = ChunkContext::default();
+        let mut chunk_decoder = ChunkDecoder::new(ChunkValidator::default());
+
         let chunks = if self.config.skip_erroneous_chunks {
-            self.decode_chunks_skip_erroneous()
+            chunk_decoder.decode_all_skip_errors(&mut chunk_context, extractor)
         } else {
-            self.decode_chunks()?
+            chunk_decoder.decode_all(&mut chunk_context, extractor)?
         };
 
         Ok(Png::new(chunks))
@@ -44,26 +44,6 @@ impl<'a> PngDecoder<'a> {
         } else {
             Ok(())
         }
-    }
-
-    fn decode_chunks(&mut self) -> PngResult<Vec<Chunk>> {
-        RawChunkExtractor::new(&self.data[8..]).try_fold(Vec::new(), |mut chunks, raw_chunk| {
-            let chunk = self
-                .chunk_decoder
-                .decode(raw_chunk, &self.chunk_validator)?;
-            chunks.push(chunk);
-            Ok(chunks)
-        })
-    }
-
-    fn decode_chunks_skip_erroneous(&mut self) -> Vec<Chunk> {
-        RawChunkExtractor::new(&self.data[8..])
-            .filter_map(|raw_chunk| {
-                self.chunk_decoder
-                    .decode(raw_chunk, &self.chunk_validator)
-                    .ok()
-            })
-            .collect()
     }
 }
 
