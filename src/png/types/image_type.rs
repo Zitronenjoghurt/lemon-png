@@ -76,6 +76,10 @@ impl ImageType {
             Self::RGBA64 => ColorType::TruecolorAlpha,
         }
     }
+
+    pub fn bits_per_pixel(&self) -> u8 {
+        self.color_type().bits_per_pixel(self.bit_depth())
+    }
 }
 
 impl TryFrom<(ColorType, u8)> for ImageType {

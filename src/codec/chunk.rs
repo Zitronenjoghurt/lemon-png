@@ -3,7 +3,6 @@ use crate::error::{PngError, PngResult};
 use crate::png::chunk::ChunkType;
 use crate::png::invalid_chunk::InvalidChunk;
 pub mod context;
-pub mod idat;
 pub mod ihdr;
 pub mod plte;
 

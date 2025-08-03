@@ -1,9 +1,10 @@
 use crate::codec::chunk::context::ChunkContext;
-use crate::codec::chunk::{idat, ihdr, plte};
+use crate::codec::chunk::{ihdr, plte};
 use crate::codec::parsed_chunk::ParsedChunk;
 use crate::codec::raw_chunk::RawChunk;
 use crate::codec::validate::chunk::ChunkValidator;
 use crate::error::{PngError, PngResult};
+use crate::png::chunk::idat::IDATChunk;
 use crate::png::chunk::{Chunk, ChunkType};
 use crate::png::invalid_chunk::InvalidChunk;
 
@@ -67,7 +68,9 @@ impl ChunkDecoder {
 
         let chunk_type = ChunkType::try_from(raw.chunk_type)?;
         let parsed_chunk = match chunk_type {
-            ChunkType::ImageData => ParsedChunk::ImageData(idat::parse(raw)?),
+            ChunkType::ImageData => ParsedChunk::ImageData(IDATChunk {
+                compressed: raw.data,
+            }),
             ChunkType::ImageEnd => ParsedChunk::ImageEnd,
             ChunkType::ImageHeader => ParsedChunk::ImageHeader(ihdr::parse(raw)?),
             ChunkType::Palette => ParsedChunk::Palette(plte::parse(raw)?),
@@ -84,8 +87,7 @@ impl ChunkDecoder {
         if let Chunk::ImageHeader(header) = chunk {
             context.set_width(header.width);
             context.set_height(header.height);
-            context.set_color_type(header.color_type());
-            context.set_bit_depth(header.bit_depth());
+            context.set_image_type(header.image_type);
         }
     }
 }

@@ -10,7 +10,7 @@ pub struct ChunkValidator;
 impl ChunkValidator {
     pub fn validate(&self, context: &ChunkContext, parsed_chunk: ParsedChunk) -> PngResult<Chunk> {
         let chunk = match parsed_chunk {
-            ParsedChunk::ImageData(chunk) => Chunk::ImageData(idat::validate(chunk, context)?),
+            ParsedChunk::ImageData(chunk) => Chunk::ImageData(chunk),
             ParsedChunk::ImageEnd => Chunk::ImageEnd,
             ParsedChunk::ImageHeader(chunk) => Chunk::ImageHeader(ihdr::validate(chunk, context)?),
             ParsedChunk::Palette(chunk) => Chunk::Palette(plte::validate(chunk, context)?),

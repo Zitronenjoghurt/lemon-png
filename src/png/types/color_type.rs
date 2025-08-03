@@ -23,6 +23,22 @@ pub enum ColorType {
     TruecolorAlpha = 6,
 }
 
+impl ColorType {
+    pub fn component_count(&self) -> u8 {
+        match self {
+            Self::Greyscale => 1,
+            Self::Truecolor => 3,
+            Self::Indexed => 1,
+            Self::GreyscaleAlpha => 2,
+            Self::TruecolorAlpha => 4,
+        }
+    }
+
+    pub fn bits_per_pixel(&self, bit_depth: u8) -> u8 {
+        bit_depth * self.component_count()
+    }
+}
+
 impl std::fmt::Display for ColorType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {

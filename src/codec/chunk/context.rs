@@ -1,13 +1,12 @@
 use crate::error::{PngError, PngResult};
 use crate::png::chunk::ChunkType;
-use crate::png::types::color_type::ColorType;
+use crate::png::types::image_type::ImageType;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum ChunkContextParameter {
     Width,
     Height,
-    ColorType,
-    BitDepth,
+    ImageType,
     Offset,
 }
 
@@ -15,8 +14,7 @@ pub enum ChunkContextParameter {
 pub struct ChunkContext {
     width: Option<u32>,
     height: Option<u32>,
-    color_type: Option<ColorType>,
-    bit_depth: Option<u8>,
+    image_type: Option<ImageType>,
     offset: Option<usize>,
 }
 
@@ -53,38 +51,20 @@ impl ChunkContext {
         })
     }
 
-    pub fn get_color_type(&self) -> Option<ColorType> {
-        self.color_type
+    pub fn get_image_type(&self) -> Option<ImageType> {
+        self.image_type
     }
 
-    pub fn set_color_type(&mut self, color_type: ColorType) {
-        self.color_type = Some(color_type);
+    pub fn set_image_type(&mut self, image_type: ImageType) {
+        self.image_type = Some(image_type);
     }
 
-    pub fn require_color_type(&self, chunk_type: ChunkType) -> PngResult<ColorType> {
-        self.get_color_type().ok_or_else(|| {
+    pub fn require_image_type(&self, chunk_type: ChunkType) -> PngResult<ImageType> {
+        self.get_image_type().ok_or_else(|| {
             PngError::missing_context(
                 chunk_type,
                 self.get_offset(),
-                ChunkContextParameter::ColorType,
-            )
-        })
-    }
-
-    pub fn get_bit_depth(&self) -> Option<u8> {
-        self.bit_depth
-    }
-
-    pub fn set_bit_depth(&mut self, bit_depth: u8) {
-        self.bit_depth = Some(bit_depth);
-    }
-
-    pub fn require_bit_depth(&self, chunk_type: ChunkType) -> PngResult<u8> {
-        self.get_bit_depth().ok_or_else(|| {
-            PngError::missing_context(
-                chunk_type,
-                self.get_offset(),
-                ChunkContextParameter::BitDepth,
+                ChunkContextParameter::ImageType,
             )
         })
     }
