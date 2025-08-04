@@ -28,4 +28,13 @@ impl Png {
     pub fn builder() -> PngBuilder {
         PngBuilder::default()
     }
+
+    pub fn scanline_width(&self) -> usize {
+        // Adding one because of the filter type byte
+        self.image_type.scanline_width(self.width) + 1
+    }
+
+    pub fn bytes_per_pixel(&self) -> usize {
+        self.image_type.bytes_per_pixel()
+    }
 }

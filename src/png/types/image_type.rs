@@ -81,6 +81,14 @@ impl ImageType {
     pub fn bits_per_pixel(&self) -> u8 {
         self.color_type().bits_per_pixel(self.bit_depth())
     }
+
+    pub fn bytes_per_pixel(&self) -> usize {
+        1.max(self.bits_per_pixel() as usize / 8)
+    }
+
+    pub fn scanline_width(&self, image_width: u32) -> usize {
+        self.bits_per_pixel() as usize * image_width as usize / 8
+    }
 }
 
 impl TryFrom<(ColorType, u8)> for ImageType {

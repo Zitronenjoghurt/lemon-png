@@ -11,6 +11,7 @@ pub enum PngError {
         offset: usize,
         kind: InvalidChunk,
     },
+    InvalidImageData,
     InvalidSignature,
     MisplacedHeader,
     MissingEnd,
@@ -49,6 +50,7 @@ impl std::fmt::Display for PngError {
             } => {
                 write!(f, "Invalid chunk ({chunk_type}) at offset {offset}: {kind}")
             }
+            PngError::InvalidImageData => write!(f, "Invalid image data"),
             PngError::InvalidSignature => write!(f, "Invalid signature"),
             PngError::MisplacedHeader => write!(f, "Misplaced header chunk"),
             PngError::MissingEnd => write!(f, "Missing end chunk"),

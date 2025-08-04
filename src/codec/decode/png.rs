@@ -56,7 +56,7 @@ impl<'a> PngDecoder<'a> {
         if header_index != 0 {
             return Err(PngError::MisplacedHeader);
         };
-        if !chunks.is_type_unique(ChunkType::ImageData) {
+        if !chunks.is_type_unique(ChunkType::ImageHeader) {
             return Err(PngError::DuplicateHeader);
         };
 
