@@ -1,7 +1,6 @@
-use crate::color::rgb::ColorRGB8;
+use crate::color::rgb8::ColorRGB8;
 
-pub mod palette;
-pub mod rgb;
+pub mod rgb8;
 
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub enum ColorFormat {

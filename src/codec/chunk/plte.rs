@@ -1,10 +1,10 @@
 use crate::codec::raw_chunk::RawChunk;
-use crate::color::palette::ColorPalette;
-use crate::color::Color;
+use crate::color::rgb8::ColorRGB8;
 use crate::error::{PngError, PngResult};
 use crate::png::chunk::plte::PLTEChunk;
 use crate::png::chunk::ChunkType;
 use crate::png::invalid_chunk::InvalidChunk;
+use crate::png::types::palette::Palette;
 
 #[derive(Debug)]
 pub struct ParsedPLTEChunk {
@@ -34,10 +34,10 @@ pub fn validate(raw: ParsedPLTEChunk) -> PngResult<PLTEChunk> {
     let colors = raw
         .colors
         .chunks(3)
-        .map(|c| Color::rgb8(c[0], c[1], c[2]))
+        .map(|c| ColorRGB8::new(c[0], c[1], c[2]))
         .collect();
 
     Ok(PLTEChunk {
-        colors: ColorPalette::new(colors),
+        colors: Palette::new(colors),
     })
 }

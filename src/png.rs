@@ -1,9 +1,9 @@
-use crate::color::palette::ColorPalette;
 use crate::png::builder::PngBuilder;
 use crate::png::types::compression_method::CompressionMethod;
 use crate::png::types::filter_method::FilterMethod;
 use crate::png::types::image_type::ImageType;
 use crate::png::types::interlace_method::InterlaceMethod;
+use crate::png::types::palette::Palette;
 
 pub mod builder;
 pub mod chunk;
@@ -20,7 +20,7 @@ pub struct Png {
     pub compression_method: CompressionMethod,
     pub filter_method: FilterMethod,
     pub interlace_method: InterlaceMethod,
-    pub color_palette: ColorPalette,
+    pub color_palette: Palette,
     pub compressed_data: Vec<u8>,
 }
 
