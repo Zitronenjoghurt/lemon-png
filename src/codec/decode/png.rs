@@ -65,30 +65,11 @@ impl<'a> PngDecoder<'a> {
             return Err(PngError::MissingEnd);
         };
 
-        let palette = match chunks.get_one_by_type(ChunkType::Palette) {
-            Some(Chunk::Palette(palette)) => Some(palette),
-            _ => None,
-        };
         if header.color_type() == ColorType::Indexed && !chunks.is_type_unique(ChunkType::Palette) {
             return Err(PngError::MissingPalette);
         };
 
-        let data =
-            chunks
-                .iter_by_type(ChunkType::ImageData)
-                .fold(Vec::new(), |mut acc, (_, chunk)| {
-                    if let Chunk::ImageData(data_chunk) = chunk {
-                        acc.extend(data_chunk.compressed.clone());
-                    }
-                    acc
-                });
-
-        let mut builder = Png::builder().header_chunk(header).compressed_data(data);
-        if let Some(palette) = palette {
-            builder = builder.palette_chunk(palette);
-        }
-
-        Ok(builder.build())
+        Ok(Png::builder().chunks(chunks).build())
     }
 }
 

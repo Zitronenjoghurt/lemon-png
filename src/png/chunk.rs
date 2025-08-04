@@ -105,6 +105,10 @@ impl Chunks {
         self.iter_by_type(chunk_type).next()
     }
 
+    pub fn get_first_index_by_type(&self, chunk_type: ChunkType) -> Option<usize> {
+        self.iter_by_type(chunk_type).next().map(|(index, _)| index)
+    }
+
     pub fn is_type_unique(&self, chunk_type: ChunkType) -> bool {
         self.iter_by_type(chunk_type).count() == 1
     }
@@ -121,5 +125,14 @@ impl Chunks {
 
     pub fn is_type_at_index_and_unique(&self, chunk_type: ChunkType, index: usize) -> bool {
         self.is_type_unique(chunk_type) && self.is_type_at_index(chunk_type, index)
+    }
+}
+
+impl IntoIterator for Chunks {
+    type Item = Chunk;
+    type IntoIter = std::vec::IntoIter<Chunk>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }

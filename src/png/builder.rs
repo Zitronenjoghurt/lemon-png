@@ -1,6 +1,8 @@
 use crate::color::palette::ColorPalette;
+use crate::png::chunk::idat::IDATChunk;
 use crate::png::chunk::ihdr::IHDRChunk;
 use crate::png::chunk::plte::PLTEChunk;
+use crate::png::chunk::Chunk;
 use crate::png::types::image_type::ImageType;
 use crate::png::types::interlace_method::InterlaceMethod;
 use crate::png::Png;
@@ -17,7 +19,7 @@ impl PngBuilder {
     }
 
     pub fn compressed_data(mut self, compressed_data: Vec<u8>) -> Self {
-        self.png.compressed_data = compressed_data;
+        self.png.compressed_data.extend(compressed_data);
         self
     }
 
@@ -47,7 +49,26 @@ impl PngBuilder {
         self
     }
 
-    pub fn header_chunk(mut self, chunk: &IHDRChunk) -> Self {
+    pub fn chunks(self, chunks: impl IntoIterator<Item = Chunk>) -> Self {
+        chunks
+            .into_iter()
+            .fold(self, |builder, chunk| builder.chunk(chunk))
+    }
+
+    pub fn chunk(self, chunk: Chunk) -> Self {
+        match chunk {
+            Chunk::ImageHeader(header) => self.header_chunk(header),
+            Chunk::Palette(palette) => self.palette_chunk(palette),
+            Chunk::ImageData(data) => self.data_chunk(data),
+            _ => self,
+        }
+    }
+
+    pub fn data_chunk(self, chunk: IDATChunk) -> Self {
+        self.compressed_data(chunk.compressed)
+    }
+
+    pub fn header_chunk(mut self, chunk: IHDRChunk) -> Self {
         self.png.width = chunk.width;
         self.png.height = chunk.height;
         self.png.image_type = chunk.image_type;
@@ -57,7 +78,7 @@ impl PngBuilder {
         self
     }
 
-    pub fn palette_chunk(mut self, chunk: &PLTEChunk) -> Self {
+    pub fn palette_chunk(mut self, chunk: PLTEChunk) -> Self {
         self.png.color_palette = chunk.colors.clone();
         self
     }
